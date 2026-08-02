@@ -2,7 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
-import { generateToken } from "../middleware/auth.js";
+import { authenticate, generateToken } from "../middleware/auth.js";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -57,9 +57,15 @@ router.get("/me", authenticate, async (req, res, next) => {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
       include: { subscription: true },
-      select: { id: true, email: true, name: true, subscription: true, createdAt: true },
     });
-    res.json(user);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      subscription: user.subscription,
+      createdAt: user.createdAt,
+    });
   } catch (err) {
     next(err);
   }
