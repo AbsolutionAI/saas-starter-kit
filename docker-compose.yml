@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: saas
+      POSTGRES_PASSWORD: saas
+      POSTGRES_DB: saas
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  api:
+    build: ./apps/api
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      JWT_SECRET: docker-dev-secret
+      DATABASE_URL: postgresql://saas:saas@db:5432/saas
+      CLIENT_URL: http://localhost:5173
+    depends_on:
+      - db
+  web:
+    build: ./apps/web
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+volumes:
+  pgdata:
